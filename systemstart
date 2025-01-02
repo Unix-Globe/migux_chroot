@@ -1,0 +1,34 @@
+#!/bin/usr/env sh
+
+# check if the Chroot binary exists
+if ! command -v chroot >/dev/null 2>&1; then
+    echo "Error: 'chroot' command not found. Please install it first."
+    exit 1
+fi
+
+startMigUxChrootEnv() {
+    echo "starting migux chroot environment..."
+    echo "* Starting system services..."
+    sleep 1
+    echo "* Mounting virtual filesystems..."
+    sleep 1
+    echo "* Initializing network interfaces..."
+    sleep 1
+    echo "* System initialization complete."
+    sleep 1
+
+    
+echo " /$$      /$$ /$$$$$$  /$$$$$$          /$$   /$$ /$$   /$$ "
+echo "| $$$    /$$$|_  $$_/ /$$__  $$        | $$  | $$| $$  / $$ "
+echo "| $$$$  /$$$$  | $$  | $$  \__/        | $$  | $$|  $$/ $$/ "
+echo "| $$ $$/$$ $$  | $$  | $$ /$$$$ /$$$$$$| $$  | $$ \  $$$$/  "
+echo "| $$  $$$| $$  | $$  | $$|_  $$|______/| $$  | $$  >$$  $$  "
+echo "| $$\  $ | $$  | $$  | $$  \ $$        | $$  | $$ /$$/\  $$ "
+echo "| $$ \/  | $$ /$$$$$$|  $$$$$$/        |  $$$$$$/| $$  \ $$ "
+echo "|__/     |__/|______/ \______/          \______/ |__/  |__/ "
+echo "Welcome to MIGUX Chroot Environment!"
+    echo ""
+    chroot ~/migux_chenv /bin/sh
+}
+
+startMigUxChrootEnv
