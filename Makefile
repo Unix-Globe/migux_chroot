@@ -1,4 +1,5 @@
 CC = gcc
+CPP = g++
 AS = nasm
 CFLAGS = -Wall -Wextra -std=c99
 LDFLAGS = 
@@ -8,8 +9,8 @@ SRC_DIR = C
 OBJ_DIR = obj
 BIN_DIR = bin
 
-C_SRCS = $(wildcard $(SRC_DIR)/*.c)
-ASM_SRCS = $(wildcard $(SRC_DIR)/*.s)
+C_SRCS = $(filter-out $(wildcard $(SRC_DIR)/*.c), $(shell find $(SRC_DIR) -type f -size +0c -name '*.c'))
+ASM_SRCS = $(filter-out $(wildcard $(SRC_DIR)/*.s), $(shell find $(SRC_DIR) -type f -size +0c -name '*.s'))
 C_BINS = $(patsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%, $(notdir $(C_SRCS:.c=)))
 ASM_BINS = $(patsubst $(SRC_DIR)/%.s, $(BIN_DIR)/%.bin, $(notdir $(ASM_SRCS:.s=)))
 
