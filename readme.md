@@ -115,25 +115,81 @@ Packages are selected based on system size and can be customized through menucon
 - Default security policies
 - Root password configuration
 
+## Installation
+
+### Using the Installer
+1. Build the installer:
+   ```bash
+   make installer
+   ```
+
+2. Run the installer as root:
+   ```bash
+   sudo ./bin/installer
+   ```
+
+3. Follow the installation wizard to:
+   - Specify target directory
+   - Configure virtual filesystems
+   - Enable/disable networking
+   - Choose development tools
+
+4. Enter the chroot environment:
+   ```bash
+   sudo chroot /path/to/chroot /bin/sh
+   ```
+
+The installer provides:
+- Directory structure creation
+- Virtual filesystem mounting (proc, sys, dev, pts)
+- Network configuration
+- Base system installation
+- Optional development tools
+
+### Manual Installation
+1. Create the chroot directory:
+   ```bash
+   sudo mkdir -p /path/to/chroot
+   ```
+
+2. Extract the base system:
+   ```bash
+   sudo tar xf /usr/share/mig_ux/base.tar.xz -C /path/to/chroot
+   ```
+
+3. Mount virtual filesystems:
+   ```bash
+   sudo mount -t proc proc /path/to/chroot/proc
+   sudo mount -t sysfs sys /path/to/chroot/sys
+   sudo mount -o bind /dev /path/to/chroot/dev
+   sudo mount -o bind /dev/pts /path/to/chroot/dev/pts
+   ```
+
+4. Enter the chroot:
+   ```bash
+   sudo chroot /path/to/chroot /bin/sh
+   ```
+
 ## Usage
 
 ### Creating a Chroot Environment
 ```bash
-# Build the system
+# Configure the system
 make menuconfig
+
+# Build the base system
 make
 
 # Create and enter chroot
 sudo ./bin/bootmaker /path/to/rootfs
 ```
 
-### Creating Installation Media
+### Creating Distribution Tarball
 ```bash
-# Configure the distribution
-make menuconfig
+# Configure OEM settings
 make oemconfig
 
-# Build installation media
+# Build tarball
 make mkimage
 
 # Output will be in images/ directory

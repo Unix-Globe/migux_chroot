@@ -150,7 +150,7 @@ PACKAGE_SRCS = $(addprefix $(SYSTEM_DIR)/, $(addsuffix .cpp, $(subst $(comma), ,
 ALL_SRCS = $(CORE_SRCS) $(PACKAGE_SRCS)
 
 # Main targets
-.PHONY: all clean menuconfig oemconfig bootmaker packages core-modules mkimage
+.PHONY: all clean menuconfig oemconfig bootmaker packages core-modules mkimage installer
 
 all: bootmaker core-modules packages
 
@@ -186,6 +186,10 @@ $(BIN_DIR)/mkimage: $(SRC_DIR)/tools/mkimage.cpp
 	@mkdir -p $(BIN_DIR)
 	$(CPP) $(CPPFLAGS) -o $@ $< $(LDFLAGS)
 
+$(BIN_DIR)/installer: $(SRC_DIR)/tools/installer.cpp
+	@mkdir -p $(BIN_DIR)
+	$(CPP) $(CPPFLAGS) -o $@ $< $(MENUCONFIG_LDFLAGS)
+
 bootmaker: $(BIN_DIR)/bootmaker
 	@echo "Bootmaker compiled successfully"
 	@echo "Run 'sudo ./bin/bootmaker <rootfs-path>' to create and enter chroot environment"
@@ -201,6 +205,8 @@ oemconfig: $(BIN_DIR)/oemconfig
 mkimage: $(BIN_DIR)/mkimage packages
 	@mkdir -p $(IMAGE_DIR)
 	@$(BIN_DIR)/mkimage $(CONFIG_DIR)/oem.conf
+
+installer: $(BIN_DIR)/installer
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(IMAGE_DIR)
