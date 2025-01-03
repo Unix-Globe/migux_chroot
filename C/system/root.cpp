@@ -1,3 +1,6 @@
+#ifndef ROOT_H
+#define ROOT_H
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -7,8 +10,7 @@
 #include <grp.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
-#include <sys/capability.h>
-#include <linux/capability.h>
+#include <sys/prctl.h>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -73,21 +75,6 @@ private:
                 }
             }
         }
-        return true;
-    }
-
-    bool dropCapabilities() {
-        cap_t caps = cap_init();
-        if (!caps) {
-            return false;
-        }
-        
-        if (cap_set_proc(caps) == -1) {
-            cap_free(caps);
-            return false;
-        }
-        
-        cap_free(caps);
         return true;
     }
 
@@ -187,7 +174,7 @@ public:
         return true;
     }
 
-    bool executeSecurely(const std::string& command, uid_t targetUid = 0, gid_t targetGid = 0) {
+    bool executeSecurely(const std::string& command) {
         if (!isRoot) {
             throw SecurityException("Root privileges required for secure execution");
         }
@@ -198,18 +185,6 @@ public:
         }
 
         if (pid == 0) {  // Child process
-            // Drop capabilities
-            if (!dropCapabilities()) {
-                _exit(EXIT_FAILURE);
-            }
-
-            // Change to target user if specified
-            if (targetUid != 0) {
-                if (setuid(targetUid) != 0) {
-                    _exit(EXIT_FAILURE);
-                }
-            }
-
             // Execute the command
             execl("/bin/sh", "sh", "-c", command.c_str(), nullptr);
             _exit(EXIT_FAILURE);
@@ -232,38 +207,4 @@ public:
     }
 };
 
-// Example usage
-int main(int argc, char* argv[]) {
-    try {
-        RootManager rootMgr;
-
-        if (!rootMgr.checkRootAccess()) {
-            std::cerr << "Error: This program must be run as root\n";
-            return 1;
-        }
-
-        if (argc < 2) {
-            std::cerr << "Usage: " << argv[0] << " <chroot-path>\n";
-            return 1;
-        }
-
-        // Enter chroot environment
-        rootMgr.enterChroot(argv[1]);
-
-        // Execute some commands in chroot
-        rootMgr.executeSecurely("id");
-        rootMgr.executeSecurely("mount");
-
-        // Drop privileges for safety
-        rootMgr.dropPrivileges();
-
-    } catch (const SecurityException& e) {
-        std::cerr << "Security error: " << e.what() << std::endl;
-        return 1;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
-
-    return 0;
-}
+#endif // ROOT_H
