@@ -267,7 +267,8 @@ public:
                     break;
                 case 10: { // Enter
                     ITEM* cur = current_item(menu);
-                    std::string item_name = item_name(cur);
+                    const char* name = item_name(cur);
+                    std::string item_name(name);
                     
                     if (item_name == "Save and Exit") {
                         save_config();
@@ -277,10 +278,10 @@ public:
                     
                     if (!is_category_header(item_name)) {
                         int index = item_index(cur);
-                        size_t opt_index = 0;
-                        for (size_t i = 0; i < options.size(); ++i) {
+                        std::size_t opt_index = 0;
+                        for (std::size_t i = 0; i < options.size(); ++i) {
                             if (!is_category_header(item_names[i])) {
-                                if (opt_index == index) {
+                                if (opt_index == static_cast<std::size_t>(index)) {
                                     edit_option(options[i]);
                                     recreate_menu();
                                     break;

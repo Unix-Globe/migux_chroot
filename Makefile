@@ -3,7 +3,7 @@ CPP = g++
 AS = nasm
 CFLAGS = -Wall -Wextra -std=c99
 CPPFLAGS = -Wall -Wextra -std=c++17 -I$(SRC_DIR)
-LDFLAGS = -pthread
+LDFLAGS = -pthread -lreadline -lhistory
 MENUCONFIG_LDFLAGS = -lncurses -lmenu
 
 SRC_DIR = C
@@ -114,59 +114,36 @@ CPPFLAGS += -DSYSTEM_PACKAGES=\"$(SYSTEM_PACKAGES)\" \
             -DENABLE_GDB=$(ENABLE_GDB) \
             -DENABLE_STRACE=$(ENABLE_STRACE)
 
-# Core system modules
-CORE_MODULES = init mount proc sys dev
+# Core system modules - only include modules that have source files
+CORE_MODULES = init mount network
 
-# Conditional modules based on configuration
-ifeq ($(ENABLE_NETWORK),1)
-    CORE_MODULES += network
-    ifeq ($(ENABLE_DHCP),1)
-        CORE_MODULES += dhcp
-    endif
-    ifeq ($(ENABLE_DNS),1)
-        CORE_MODULES += dns
-    endif
-endif
+# Unix programs
+UNIX_PROGRAMS = ash greenbox root autoboot
 
-ifeq ($(ENABLE_PAM),1)
-    CORE_MODULES += pam
-endif
-
-ifeq ($(ENABLE_SELINUX),1)
-    CORE_MODULES += selinux
-endif
-
-ifeq ($(ENABLE_UDEV),1)
-    CORE_MODULES += udev
-endif
-
-ifeq ($(ENABLE_PACKAGE_MANAGER),1)
-    CORE_MODULES += package-manager
-endif
+# Optional modules will be added when their source files are created
+# For now, we only build modules that have source files in C/system/core/
 
 # Source files
 CORE_SRCS = $(addprefix $(SYSTEM_DIR)/core/, $(addsuffix .cpp, $(CORE_MODULES)))
-PACKAGE_SRCS = $(addprefix $(SYSTEM_DIR)/, $(addsuffix .cpp, $(subst $(comma), ,$(SYSTEM_PACKAGES))))
-ALL_SRCS = $(CORE_SRCS) $(PACKAGE_SRCS)
+UNIX_SRCS = $(addprefix $(SYSTEM_DIR)/, $(addsuffix .cpp, $(UNIX_PROGRAMS)))
+ALL_SRCS = $(CORE_SRCS) $(UNIX_SRCS)
 
 # Main targets
-.PHONY: all clean menuconfig oemconfig bootmaker packages core-modules mkimage installer
+.PHONY: all clean menuconfig oemconfig bootmaker packages core-modules mkimage installer unix-programs
 
-all: bootmaker core-modules packages
+all: bootmaker core-modules unix-programs packages
 
-core-modules: $(CORE_MODULES:%=$(BIN_DIR)/%)
+core-modules: $(addprefix $(BIN_DIR)/, $(CORE_MODULES))
 	@echo "Core modules built: $(CORE_MODULES)"
 
-packages: $(BIN_DIR)
-	@echo "Building packages..."
-	@for pkg in $(subst $(comma), ,$(SYSTEM_PACKAGES)); do \
-		if [ -f "$(SYSTEM_DIR)/$$pkg.cpp" ]; then \
-			echo "Building $$pkg..."; \
-			$(CPP) $(CPPFLAGS) -o $(BIN_DIR)/$$pkg $(SYSTEM_DIR)/$$pkg.cpp $(LDFLAGS); \
-		fi \
-	done
+unix-programs: $(addprefix $(BIN_DIR)/, $(UNIX_PROGRAMS))
+	@echo "Unix programs built: $(UNIX_PROGRAMS)"
 
 $(BIN_DIR)/%: $(SYSTEM_DIR)/core/%.cpp
+	@mkdir -p $(BIN_DIR)
+	$(CPP) $(CPPFLAGS) -o $@ $< $(LDFLAGS)
+
+$(BIN_DIR)/%: $(SYSTEM_DIR)/%.cpp
 	@mkdir -p $(BIN_DIR)
 	$(CPP) $(CPPFLAGS) -o $@ $< $(LDFLAGS)
 
@@ -207,6 +184,15 @@ mkimage: $(BIN_DIR)/mkimage packages
 	@$(BIN_DIR)/mkimage $(CONFIG_DIR)/oem.conf
 
 installer: $(BIN_DIR)/installer
+
+packages: $(BIN_DIR)
+	@echo "Building packages..."
+	@for pkg in $(subst $(comma), ,$(SYSTEM_PACKAGES)); do \
+		if [ -f "$(SYSTEM_DIR)/$$pkg.cpp" ]; then \
+			echo "Building $$pkg..."; \
+			$(CPP) $(CPPFLAGS) -o $(BIN_DIR)/$$pkg $(SYSTEM_DIR)/$$pkg.cpp $(LDFLAGS); \
+		fi \
+	done
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR) $(IMAGE_DIR)

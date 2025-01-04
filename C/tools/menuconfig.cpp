@@ -183,7 +183,7 @@ private:
         int col;
         getmaxyx(stdscr, std::ignore, col);
         attron(A_BOLD | COLOR_PAIR(1));
-        mvprintw(1, (col - 30) / 2, "Migux Unix System Configuration");
+        mvprintw(1, (col - 30) / 2, "MIG/UX System Configuration");
         attroff(A_BOLD | COLOR_PAIR(1));
         mvhline(2, 1, ACS_HLINE, col - 2);
     }
@@ -322,7 +322,8 @@ public:
                     break;
                 case 10: { // Enter
                     ITEM* cur = current_item(menu);
-                    std::string item_name = item_name(cur);
+                    const char* name = item_name(cur);
+                    std::string item_name(name);
                     
                     if (item_name == "Save and Exit") {
                         save_config();
